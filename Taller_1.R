@@ -29,7 +29,7 @@ summary(base_geih_clean)
 
 variables <- c("age", "maxEducLevel", "cotPension", 
                "sex", "oficio", "sizeFirm", "relab",
-               "regSalud", "cotPension", "sizeFirm", "oficio",
+               "regSalud",
                "y_total_m")
 
   # Base con variables seleccionadas 
