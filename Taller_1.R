@@ -25,11 +25,11 @@ str(base_geih_clean)
 # Resumen de las variables
 summary(base_geih_clean)
 # para ciclo de vida (age, maxEduclevel, cotPension)
-# para brechas (sex, oficio, sizefirm, relab)
+# para brechas (sex, oficio, sizefirm, relab, totalHoursWorked)
 # para impuestos (regsalud, cotpensión, sizefirm, oficio)
 
 variables <- c("age", "maxEducLevel", "cotPension", 
-               "sex", "oficio", "sizeFirm", "relab",
+               "sex", "oficio", "sizeFirm", "relab","totalHoursWorked",
                "regSalud",
                "y_total_m")
 
@@ -55,6 +55,7 @@ ggplot(data = db , mapping = aes(x = oficio , y = y_total_m)) + geom_point(col =
 ggplot(data = db , mapping = aes(x = sizeFirm , y = y_total_m)) + geom_point(col = "red" , size = 0.5)
 ggplot(data = db , mapping = aes(x = relab , y = y_total_m)) + geom_point(col = "red" , size = 0.5)
 ggplot(data = db , mapping = aes(x = regSalud , y = y_total_m)) + geom_point(col = "red" , size = 0.5)
+ggplot(data = db , mapping = aes(x = totalHoursWorked , y = y_total_m)) + geom_point(col = "red" , size = 0.5)
 
 # Visualización agrupada de datos por sexo
 ggplot(data = db , mapping = aes(x = age , y = y_total_m, group = as.factor(sex), color = as.factor(sex))) + geom_point()
@@ -65,6 +66,7 @@ ggplot(data = db , mapping = aes(x = oficio , y = y_total_m, group = as.factor(s
 ggplot(data = db , mapping = aes(x = sizeFirm , y = y_total_m, group = as.factor(sex), color = as.factor(sex))) + geom_point()
 ggplot(data = db , mapping = aes(x = relab , y = y_total_m, group = as.factor(sex), color = as.factor(sex))) + geom_point()
 ggplot(data = db , mapping = aes(x = regSalud , y = y_total_m, group = as.factor(sex), color = as.factor(sex))) + geom_point()
+ggplot(data = db , mapping = aes(x = totalHoursWorked , y = y_total_m, group = as.factor(sex), color = as.factor(sex))) + geom_point()
 
 # Distribución de edad en variables
 ggplot(data=db) + geom_histogram(mapping = aes(x=y_total_m , group=as.factor(age),fill=as.factor(age)))
@@ -74,6 +76,7 @@ ggplot(data=db) + geom_histogram(mapping = aes(x=sex , group=as.factor(age),fill
 ggplot(data=db) + geom_histogram(mapping = aes(x=oficio , group=as.factor(age),fill=as.factor(age)))
 ggplot(data=db) + geom_histogram(mapping = aes(x=sizeFirm , group=as.factor(age),fill=as.factor(age)))
 ggplot(data=db) + geom_histogram(mapping = aes(x=relab , group=as.factor(age),fill=as.factor(age)))
+ggplot(data=db) + geom_histogram(mapping = aes(x=totalHoursWorked , group=as.factor(age),fill=as.factor(age)))
 
 
 # cajas por variable
@@ -92,7 +95,9 @@ ggplot(data=db , mapping = aes(as.factor(sizeFirm), y_total_m)) + geom_boxplot()
 ggplot(data=db , mapping = aes(as.factor(relab), y_total_m)) + geom_boxplot() + geom_point(aes(colour=as.factor(sex))) + 
   scale_color_manual(values = c("0"="red" , "1"="blue"),label = c("0"="Hombre" , "1"="Mujer"),name = "Sexo")
 ggplot(data=db , mapping = aes(as.factor(regSalud), y_total_m)) + geom_boxplot() + geom_point(aes(colour=as.factor(sex))) + 
-  scale_color_manual
+  scale_color_manual(values = c("0"="red" , "1"="blue"),label = c("0"="Hombre" , "1"="Mujer"),name = "Sexo")
+ggplot(data=db , mapping = aes(as.factor(totalHoursWorked), y_total_m)) + geom_boxplot() + geom_point(aes(colour=as.factor(sex))) + 
+  scale_color_manual(values = c("0"="red" , "1"="blue"),label = c("0"="Hombre" , "1"="Mujer"),name = "Sexo")
 
 # Valores faltantes
 
