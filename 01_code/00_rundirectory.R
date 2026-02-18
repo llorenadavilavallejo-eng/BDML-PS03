@@ -8,8 +8,9 @@
 # or from the command line: R CMD BATCH 01_code/00_rundirectory.R
 #
 # Authors:
-# - Juan Guillermo Sánchez
+#
 # - Leidy Lorena Dávila Vallejo
+# - Juan Guillermo Sánchez
 # - Héctor Steben Barrios Carranza
 ##########################################################
 

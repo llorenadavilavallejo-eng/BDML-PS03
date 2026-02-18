@@ -6,8 +6,8 @@ En este repositorio encontrará la solución del Problem set 1 correspondiente a
 
 ## Autores
 
--   Juan Guillermo Sánchez - COD:
 -   Leidy Lorena Dávila Vallejo - COD:
+-   Juan Guillermo Sánchez - COD:
 -   Héctor Steben Barrios Carranza - COD:
 
 ## Replicación
