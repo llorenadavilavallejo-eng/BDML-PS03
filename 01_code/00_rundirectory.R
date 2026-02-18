@@ -1,0 +1,35 @@
+##########################################################
+# Master script
+#
+# Running this file reproduces all results in the repository.
+#
+# To reproduce all results, run:
+# from an interactive R session: source("01_code/00_rundirectory.R")   
+# or from the command line: R CMD BATCH 01_code/00_rundirectory.R
+#
+# Authors:
+# - Juan Guillermo Sánchez
+# - Leidy Lorena Dávila Vallejo
+# - Héctor Steben Barrios Carranza
+##########################################################
+
+# Paso 1: Carga e instala los paquetes necesarios.
+source("01_code/01_setup_packages.R")
+
+# Paso 2: Realiza webscrapping a la página <https://ignaciomsarmiento.github.io/GEIH2018_sample/>.
+source("01_code/02_load_data.R")
+
+# Paso 3: Aplica la limpieza necesaria a los datos para obtener la base de trabajo.
+source("01_code/03_prepare_data.R")
+
+# Paso 4: Crea tablas y gráficas de estadística descriptiva de la base.
+source("01_code/04_descriptive_statistics.R")
+
+# Paso 5: Estima la relación edad-ingreso de los trabajadores bajo dos modelos:incondicional y condicional.
+source("01_code/05_age_labor_income_profile")
+
+# Paso 6: Estima la relación edad-ingreso de los trabajadores a la luz de la brecha de género.
+source("01_code/06_gender_labor_income_gap.R")
+
+# Paso 7: Realiza la predicción de los ingresos bajo el mejor modelo de predicción.
+source("01_code/07_labor_income_prediction.R")

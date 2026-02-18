@@ -1,2 +1,40 @@
 # BDML-PS03
-En este repositorio encontrará la solución del Problem set 1 correspondiente al mercado laboral en Bogotá. 
+
+Big Data y Machine Learning – Universidad de los Andes – 2026
+
+En este repositorio encontrará la solución del Problem set 1 correspondiente al mercado laboral en Bogotá, usando cifras de la GEIH de 2018.
+
+## Autores
+
+-   Juan Guillermo Sánchez - COD:
+-   Leidy Lorena Dávila Vallejo - COD:
+-   Héctor Steben Barrios Carranza - COD:
+
+## Replicación
+
+Para reproducir todos los resultados, correr:
+
+`source("01_code/00_rundirectory.R")`
+
+## Estructura de código
+
+-   `01_code/00_rundirectory.R`: Master script. Reproduce todos los códigos y resultados.
+-   `01_code/01_setup_packages.R`: Carga e instala los paquetes necesarios.
+-   `01_code/02_load_data.R`: Realiza webscrapping a la página <https://ignaciomsarmiento.github.io/GEIH2018_sample/>.
+-   `01_code/03_prepare_data.R`: Aplica la limpieza necesaria a los datos para obtener la base de trabajo.
+-   `01_code/04_descriptive_statistics.R`: Crea tablas y gráficas de estadística descriptiva de la base.
+-   `01_code/05_age_labor_income_profile.R`: Estima la relación edad-ingreso de los trabajadores bajo dos modelos:incondicional y condicional.
+-   `01_code/06_gender_labor_income_gap.R`: Estima la relación edad-ingreso de los trabajadores a la luz de la brecha de género.
+-   `01_code/07_labor_income_prediction.R`: Realiza la predicción de los ingresos bajo el mejor modelo de predicción.
+
+## Salidas
+
+Todos los outputs se generan automáticamente en `02_outputs/`.
+
+-   Figuras (`02_outputs/figures/`): visualizaciones generadas por el código
+-   Tablas (`02_outputs/tables/`): resultados de estimaciones en formato `.tex`
+
+## Software / entorno
+
+-   R version 4.5.1
+-   Required packages:

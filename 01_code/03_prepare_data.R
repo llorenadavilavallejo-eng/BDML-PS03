@@ -1,0 +1,33 @@
+# Filtro general (edad - relab)
+# Mayores de edad
+#"Obrero o empleado de empresa particular"
+#"Obrero o empleado del gobierno"
+#"Empleado doméstico"
+base_geih_clean <- base_geih %>% filter(age >= 18) #, relab %in% c(1,2,3)
+
+#3.2 Data Cleaning
+# Estructura general de las variables
+str(base_geih_clean)
+# Resumen de las variables
+summary(base_geih_clean)
+# para ciclo de vida (age, maxEduclevel, cotPension)
+# para brechas (sex, oficio, sizefirm, relab)
+# para impuestos (regsalud, cotpensión, sizefirm, oficio)
+
+variables <- c("age", "maxEducLevel", "cotPension", 
+               "sex", "oficio", "sizeFirm", "relab", "totalHoursWorked",
+               "regSalud",
+               "y_total_m")
+
+# Base con variables seleccionadas 
+base_geih_clean_vf <- base_geih_clean[, variables]
+
+# Limpieza de NA (sin ingresos reportados, sin cotización a salud, sin nivel maximo de educación) no se imputan por no afectar la var
+
+df <- base_geih_clean_vf %>% drop_na(y_total_m, regSalud, maxEducLevel)
+
+#3.3 Resumen y visualización
+
+summary(df)
+db <- as_tibble(df)
+skim(db) %>% head()
