@@ -71,6 +71,8 @@ stargazer(mod_1, mod_2,
           notes = "Fuente: GEIH 2018 Bogotá.",
           notes.align = "l")
 
+cat("\n✓ Tabla text generada: regresiones_sección_1\n")
+
 # Visualización perfiles predichos
 
 edades <- 18:80
@@ -106,3 +108,5 @@ ggsave(
   height = 5,
   dpi = 300
 )
+
+cat("\n✓ Gráfico generado: Perfil_edad_ingreso\n")

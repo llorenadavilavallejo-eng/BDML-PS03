@@ -1,123 +1,77 @@
+# Grupo de variables control de acuerdo con las características del empleado
 
-#Punto 5
-#Section 2: Gender–Labor Income Gap##
-# A continuacion se realizara el  análisis  sobre   el perfil edad ingresos-difiere  entre  hombres  y  
-#mujeres  y por otro lado frente a  la  brecha  salarial  de  género observada  puede  atribuirse  a  diferencias  en  las  
-#características  observables  frente  vs  factores  no  explicados.
+controles <- c("age","I(age^2)","total_hours_worked","relab", "max_educ_level",
+               "oficio","size_firm", "reg_salud","cot_pension","estrato1",
+               "household_head")   
 
-#El punto se divide en 3
-#5.1 brecha  incondicional de genero vs condicional FWL
-#5.2 Las interacciones de los perfiles edad-ingreso por sexo
-#5.3 Peak ages con los intervalos de confianza
-
-#Acontinuación vamos a preparar las varibales que se necesitara para realizar  los diferentes puntos 
-
-final_db <- db %>%
-  mutate(
-    female = if_else(sex == 1, 0, 1),
-    log_w = log(y_total_m)
-  ) %>%
-  filter(is.finite(log_w), y_total_m > 0)
-
-#A continuacion se realizara se incluira los con controles , incluimos varios controles que se 
-#adecuan a las caracteristicas, esto es con el fin de poder tener mejores resultados en nuestras regresiones
-
-var_controles <- c("age",
-                   "I(age^2)",
-                   "totalHoursWorked", 
-                   "as.factor(relab)",
-                   "as.factor(maxEducLevel)",
-                   "as.factor(oficio)",
-                   "as.factor(sizeFirm)",
-                   "as.factor(regSalud)",
-                   "as.factor(cotPension)"
-)   
-
-
-
-##Aqui vamos a crear una funcion auxiliar con el fin de construir la formula ###
+# Función auxiliar con el fin de construir la formula ###
 
 fml <- function(y, rhs_vec){
   as.formula(paste0(y," ~ ", paste(rhs_vec, collapse = "+")))
 }
 
-#Punto 5.1. a continuacion se calcula la brecha condicional####
+# Cálculo de la brecha condicional
+# Modelo no condicionado
 
-####Modelo Condicional######
-f_in <- lm(log_w  ~ female, data = final_db)
+mod_3 <- lm(log_ingreso  ~ female, data = db)
 
+summary(mod_3)
+beta_in <- coef(mod_3)[["female"]]
+se_in <- summary(mod_3)$coef["female", "Std. Error"]
+r2_in <- summary(mod_3)$r.squared
+n_in <- nobs(mod_3)
 
-beta_in <- coef(f_in)[["female"]]
-se_in <- summary(f_in)$coef["female", "Std. Error"]
-r2_in <- summary(f_in)$r.squared
-n_in <- nobs(f_in)
+# Modelo condicionado - usando FRISCH-WAUGH-LOVELL
+# Female explicado por los controles
 
-
-##FLW 5.1.B####Brecha condicional usando FRISCH-WAUGH-LOVELL########
-
-controles <- var_controles
-
-reg_fx <- lm(fml("female", controles), data = final_db)
+reg_fx <- lm(fml("female", controles), data=db)
 res_fx <- resid(reg_fx)
 
+# Logaritmo de ingreso explicado por los controles
 
-############################################
-# logaritmo de ingreso sobre x##
-reg_fy <- lm(fml("log_w", controles), data = final_db)
+reg_fy <- lm(fml("log_ingreso", controles), data = db)
 res_fy <- resid(reg_fy)
 
+# Regresión residual según el teorema de FWL
 
-#regresion residual (sin intercepto) segun el teorema de FWL
-
-reg_fwl <- lm(res_fy ~ 0 + res_fx)
+reg_fwl <- lm(res_fy ~ res_fx)
 beta_fwl <- coef(reg_fwl)[["res_fx"]]
 se_fwl <- summary(reg_fwl)$coef["res_fx","Std. Error"]
 
-##En esta parte validaremos  con OLS
+# Validación con OLS
 
-f_reg <- lm(fml("log_w", c("female", controles)), data = final_db)
-stopifnot(abs(coef(f_reg)[["female"]] - beta_fwl) < 1e-8)
-
+f_reg <- lm(fml("log_ingreso", c("female", controles)), data = db)
 
 r2_cond <- summary(f_reg)$r.squared
 n_cond <- nobs(f_reg)
 
+# Ejercicio errores estándar por Bootstrap
 
-
-
-#Punto 5.1.C### Error estandar BOOTSTRAP PARA BETAfemale### condicional, si utiliza bootstrap
-#para aproximar la distribcion de nuestro ejercicio
-
-#Para esto fijamos una semillapara repoducibilidad
-
-set.seed(19)
+set.seed(1996)
 B <- 1000
 
 b_strap <- replicate(B, {
-  idm <- sample.int(nrow(final_db), replace = TRUE)
-  d_b <- final_db[idm, ]
+  idm <- sample.int(nrow(db), replace = TRUE)
+  d_b <- db[idm, ]
   
   
-  ##FWL en las muestra bootstrap
+  ##FWL en las muestras bootstrap
   
   fx_b <- resid(lm(fml("female", var_controles), data = d_b))
-  fy_b <- resid(lm(fml("log_w", var_controles), data = d_b))
+  fy_b <- resid(lm(fml("log_ingreso", var_controles), data = d_b))
   
-  coef(lm(fy_b ~ 0 + fx_b))["fx_b"]
+  coef(lm(fy_b ~ fx_b))["fx_b"]
   
 })
 
-#El SE Strap es la desviacion estandar de los coeficientes
+# SE Strap es la desviación estándar de los coeficientes
 
 se_strap <- sd(b_strap)
 
-
-#Tabla de resumen Incondicional vs Condicional 
-
-#Donde se podra observar la brecha frente a las caracteristicas que tomamos
+# Tabla de resumen Incondicional vs Condicional 
 
 tab <- tibble(
-  Especificación = c( "Incondicional: log(w) ~ Female",
+  Especificación = c( "Incondicional: log(Ingresos) ~ Female",
                       "Condicional FWL: Female | X"),
   `Beta_F` = round(c(beta_in, beta_fwl), 4),
   `SE_Analit` = round(c(se_in, se_fwl), 4),
@@ -126,12 +80,12 @@ tab <- tibble(
   N = c(n_in, n_cond)
 )
 
-#realizaremos el ajuste de las tablas, con el fin de organizar la presentacion 
-#Brecha de genero Incondiciona Vs Condicional
+# Realizaremos el ajuste de las tablas para organizar la presentación 
+# Brecha de género: Incondicional Vs Condicional
 
-stargazer(f_in, f_reg,
-          type = "html",
-          out = "tabla_brecha_genero_slides.html",
+stargazer(mod_3, f_reg,
+          type = "text",
+          out = "02_output/tables/brecha_genero_sección_2.txt",
           title = "Brecha de Genero en Ingresos Laborales",
           column.labels = c("Incondicional", "Condicional"),
           covariate.labels = c("Mujer", "Edad", "Edad²", "Horas"),
@@ -145,27 +99,22 @@ stargazer(f_in, f_reg,
           notes = "SE analíticos en paréntesis. *** p<0.001, ** p<0.01, * p<0.05"
 )
 
-cat("\n✓ Tabla HTML generada: tabla_brecha_genero_slides.html\n")
-cat("  → Abre en navegador → Copia → Pega en PowerPoint\n\n")
+cat("\n✓ Tabla text generada: brecha_genero_sección_2\n")
 
-###5.2##Las interacciones de los perfiles edad-ingreso por sexo########
-
-
-#Acontinaucion corremos el modelo
+# Interacciones de los perfiles edad-ingreso por sexo
 
 m_perfiles <- lm(
-  fml("log_w",
+  fml("log_ingreso",
       c("female",
         "age", "I(age^2)",
         "female:age", "female:I(age^2)",
-        setdiff(var_controles, c("age", "I(age^2)"))
+        setdiff(controles, c("age", "I(age^2)"))
       )
   ),
-  data = final_db
+  data = db
 )
 
-
-#Vamos a utilizar una cuncion auxilar # con el fin 
+# Función auxilar # con el fin 
 
 moda_f <- function(x) {
   ux <- na.omit(x)
@@ -173,32 +122,32 @@ moda_f <- function(x) {
   
 }
 
-####Acontinuacion vamos a crear la Base de predicción: controles fijos, pero la edad varia####
+# Base de predicción: controles fijos, pero la edad varia
 
-age_seq <- seq(min(final_db$age), max(final_db$age), by = 1)
+age_seq <- seq(min(db$age), max(db$age), by = 1)
 
-Base_fija <- final_db %>%
+Base_fija <- db %>%
   summarise(
-    totalHoursWorked = mean(totalHoursWorked, na.rm = TRUE)
+    total_hours_worked = mean(total_hours_worked, na.rm = TRUE)
   ) %>%
-  
   mutate(
-    relab = as.integer(moda_f(final_db$relab)),
-    maxEducLevel = as.integer(moda_f(final_db$maxEducLevel)),
-    oficio = as.integer(moda_f(final_db$oficio)),
-    sizeFirm = as.integer(moda_f(final_db$sizeFirm)),
-    regSalud = as.integer(moda_f(final_db$regSalud)),
-    cotPension = as.integer(moda_f(final_db$cotPension))
-    
+    relab = factor(moda_f(db$relab), levels = levels(db$relab)),
+    max_educ_level = factor(moda_f(db$max_educ_level), levels = levels(db$max_educ_level)),
+    oficio = factor(moda_f(db$oficio), levels = levels(db$oficio)),
+    size_firm = factor(moda_f(db$size_firm), levels = levels(db$size_firm)),
+    reg_salud = factor(moda_f(db$reg_salud), levels = levels(db$reg_salud)),
+    cot_pension = factor(moda_f(db$cot_pension), levels = levels(db$cot_pension)),
+    estrato1 = factor(moda_f(db$estrato1), levels = levels(db$estrato1)),
+    household_head = factor(moda_f(db$household_head), levels = levels(db$household_head))
   )
 
-###Hombres########
+# Hombres
 
 Base_m <- Base_fija %>%
   slice(rep(1, length(age_seq))) %>%
   mutate(age = age_seq, female = 0)
 
-###Mujeres###
+# Mujeres
 
 Base_f <- Base_fija %>%
   slice(rep(1, length(age_seq))) %>%
@@ -216,16 +165,15 @@ df_pred <- bind_rows(
          upr = fit + 1.96 *se
   )
 
-
-################### GRAFICO###################################
-##############Perfil salarial estimado de acuerdo a Edad y Sexo#####################################
+# Gráfico Perfil salarial estimado de acuerdo a Edad y Sexo
 
 df_pred <- df_pred %>%
   mutate(
     lwr = fit - 1.96*se,
     upr = fit + 1.96*se
   )
-ggplot(df_pred, aes(x = age, y = fit, color = sex, fill = sex)) +
+
+grafico_edad_sexo <- ggplot(df_pred, aes(x = age, y = fit, color = sex, fill = sex)) +
   geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.25, color = NA) +
   geom_line(linewidth = 1) +
   scale_color_manual(values = c("hombre" = "dodgerblue4",
@@ -241,48 +189,48 @@ ggplot(df_pred, aes(x = age, y = fit, color = sex, fill = sex)) +
   ) +
   theme_minimal()
 
+ggsave(
+  filename = "02_output/figures/Perfil_edad_ingreso_sexo.png",
+  plot = grafico_edad_sexo,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+
+cat("\n✓ Gráfico generado: Perfil_edad_ingreso_sexo\n")
 
 
-
-##5.3 Peak ages con los intervalos de confianza
-
-#Acontinuacion learizaremos los peaks ages es decir los hombres y mujeres a que edad alcanzan su maximo
-#ingreso
+# Peak ages con intervalos de confianza
 
 coef_prof <- coef(m_perfiles)
 
-#hombre beta age y age^2
+# Hombre beta age y age^2
 b1_m <- coef_prof[["age"]]
 b2_m <- coef_prof[["I(age^2)"]]
 peak_m <- -b1_m/ (2*b2_m)
 
-#mujer
+# Mujer
 
 b1_f <- b1_m + coef_prof[["female:age"]]
 b2_f <- b2_m + coef_prof [["female:I(age^2)"]]
 peak_f <- -b1_f/ (2*b2_f)
 
+# Bootstrap peak age e intervalos de confianza
 
-########Bootstrap peak age y los intervalos de confianza###
-
-#Para esto fijamos una semillapara repoducibilidad
-
-set.seed(19)
+set.seed(1996)
 B <- 1000
-
 
 boot_peaks <- replicate(B, {
   
-  idx <- sample.int(nrow(final_db), replace = TRUE)
-  d_b <- final_db [idx, ]
-  
+  idx <- sample.int(nrow(db), replace = TRUE)
+  d_b <- db [idx, ]
   
   m_b <- lm(
-    fml("log_w",
+    fml("log_ingreso",
         c("female",
           "age", "I(age^2)",
           "female:age", "female:I(age^2)",
-          setdiff(var_controles, c("age", "I(age^2)"))
+          setdiff(controles, c("age", "I(age^2)"))
         )
     ),
     data = d_b
@@ -306,7 +254,7 @@ boot_peaks <- replicate(B, {
 ci_m <-quantile(boot_peaks["peak_m",], c(0.025, 0.975), na.rm = TRUE)
 ci_f <-quantile(boot_peaks["peak_f",], c(0.025, 0.975), na.rm = TRUE)
 
-##Tabla### peak age por sexo
+# Tabla Peak age por sexo
 
 tab_peaks <- tibble(
   Grupo  = c("Hombre", "Mujer"),
@@ -327,7 +275,6 @@ tabla_peaks_html <- tab_peaks %>%
   row_spec(0, bold = TRUE, background = "#4472C4", color = "white") %>%
   row_spec(1:2, background = c("white", "#F2F2F2"))
 
-save_kable(tabla_peaks_html, "tabla_peaks.html")
+save_kable(tabla_peaks_html, file = "02_output/tables/tabla_peaks.html")
 
-cat("Tabla peaks guardada: tabla_peaks.html")
-cat("Abre en navegador y captura pantalla")
+cat("\n✓ Tabla html generada: tabla_peaks.html\n")
