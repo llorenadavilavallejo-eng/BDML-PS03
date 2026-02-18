@@ -22,7 +22,7 @@ Para reproducir todos los resultados, correr:
 -   `01_code/01_setup_packages.R`: Carga e instala los paquetes necesarios.
 -   `01_code/02_load_and_preprare_data.R`: Importa los datos por webscrapping y realiza la limpieza necesaria a los datos.
 -   `01_code/03_descriptive_statistics.R`: Crea tablas y gráficas de estadística descriptiva de la base.
--   `01_code/04_age_labor_income_profile.R`: Estima la relación edad-ingreso de los trabajadores bajo dos modelos:incondicional y condicional.
+-   `01_code/04_age_labor_income_profile.R`: Estima la relación edad-ingreso de los trabajadores bajo dos modelos:no condicional y condicional.
 -   `01_code/05_gender_labor_income_gap.R`: Estima la relación edad-ingreso de los trabajadores a la luz de la brecha de género.
 -   `01_code/06_labor_income_prediction.R`: Realiza la predicción de los ingresos bajo el mejor modelo de predicción.
 

@@ -1,7 +1,5 @@
-# 4. Sección 1
-
 # Modelo Ingreso - Edad (NO condicionado)
-mod_1 <- lm(log(y_total_m) ~ age + I(age^2), data = db)
+mod_1 <- lm(log_ingreso ~ age + I(age^2), data = db)
 stargazer(mod_1,type="text", omit.stat=c("ser","f","adj.rsq"))
 
 str(mod_1)
@@ -20,8 +18,8 @@ length(eta_mod_1)
 
 for(i in 1:B){
   db_sample<- sample_frac(db,size=1,replace=TRUE)
-  f<-lm(log(y_total_m) ~ age + I(age^2), data = db_sample)
-  eta_mod_1[i]<- -(f$coefficients[2])/(2*f$coefficients[3]) #saves it in the above vector
+  f<-lm(log_ingreso ~ age + I(age^2), data = db_sample)
+  eta_mod_1[i]<- -(f$coefficients[2])/(2*f$coefficients[3]) 
 }
 
 eta_mod_1
@@ -32,7 +30,7 @@ quantile(eta_mod_1,c(0.025,0.975))
 
 # Modelo ingreso - edad - horas - relación
 
-mod_2 <- lm(log(y_total_m) ~ age + I(age^2) + totalHoursWorked + factor(relab) , data = db)
+mod_2 <- lm(log_ingreso ~ age + I(age^2) + total_hours_worked + relab , data = db)
 stargazer(mod_2,type="text", omit.stat=c("ser","f","adj.rsq"))
 
 str(mod_2)
@@ -49,8 +47,8 @@ length(eta_mod_2)
 
 for(i in 1:B){
   db_sample<- sample_frac(db,size=1,replace=TRUE)
-  f<-lm(log(y_total_m) ~ age + I(age^2) + totalHoursWorked + factor(relab), data = db_sample)
-  eta_mod_2[i]<- -(f$coefficients[2])/(2*f$coefficients[3]) #saves it in the above vector
+  f<-lm(log_ingreso ~ age + I(age^2) + total_hours_worked + relab, data = db_sample)
+  eta_mod_2[i]<- -(f$coefficients[2])/(2*f$coefficients[3]) 
 }
 
 eta_mod_2
@@ -63,6 +61,7 @@ quantile(eta_mod_2,c(0.025,0.975))
 
 stargazer(mod_1, mod_2,
           type = "text",
+          out = "02_output/tables/regresiones_sección_1.txt",
           add.lines = list(
             c("Edad Pico", round(mean(eta_mod_1),2), round(mean(eta_mod_2),2)),
             c("IC Bootstrap (2.5%)", round(quantile(eta_mod_1,c(0.025,0.975))[1],2), round(quantile(eta_mod_1,c(0.025,0.975))[2],2)),
@@ -75,10 +74,10 @@ stargazer(mod_1, mod_2,
 # Visualización perfiles predichos
 
 edades <- 18:80
-moda_relab <- as.numeric(names(which.max(table(db$relab))))
+moda_relab <- names(which.max(table(db$relab)))
 
 df_preds <- data.frame(
-  age = edades,totalHoursWorked = mean(db$totalHoursWorked, na.rm = TRUE),relab = moda_relab)
+  age = edades,total_hours_worked = mean(db$total_hours_worked, na.rm = TRUE),relab = moda_relab)
 
 df_preds <- df_preds %>%
   mutate(
@@ -86,7 +85,7 @@ df_preds <- df_preds %>%
     pred_mod_2 = predict(mod_2, newdata = df_preds)
   )
 
-ggplot(df_preds, aes(x = age)) +
+grafico_edad <- ggplot(df_preds, aes(x = age)) +
   # Mod_1 (Incondicional)
   geom_line(aes(y = pred_mod_1, color = "Incondicional (Solo Edad)"), size = 1) +
   # Mod_2 (Condicional)
@@ -99,3 +98,11 @@ ggplot(df_preds, aes(x = age)) +
   theme_minimal() +
   scale_color_manual(values = c("Incondicional (Solo Edad)" = "blue", 
                                 "Condicional (Horas + Relab)" = "red"))
+
+ggsave(
+  filename = "02_output/figures/Perfil_edad_ingreso.png",
+  plot = grafico_edad,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
