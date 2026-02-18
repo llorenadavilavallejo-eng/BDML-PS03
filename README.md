@@ -20,12 +20,11 @@ Para reproducir todos los resultados, correr:
 
 -   `01_code/00_rundirectory.R`: Master script. Reproduce todos los códigos y resultados.
 -   `01_code/01_setup_packages.R`: Carga e instala los paquetes necesarios.
--   `01_code/02_load_data.R`: Realiza webscrapping a la página <https://ignaciomsarmiento.github.io/GEIH2018_sample/>.
--   `01_code/03_prepare_data.R`: Aplica la limpieza necesaria a los datos para obtener la base de trabajo.
--   `01_code/04_descriptive_statistics.R`: Crea tablas y gráficas de estadística descriptiva de la base.
--   `01_code/05_age_labor_income_profile.R`: Estima la relación edad-ingreso de los trabajadores bajo dos modelos:incondicional y condicional.
--   `01_code/06_gender_labor_income_gap.R`: Estima la relación edad-ingreso de los trabajadores a la luz de la brecha de género.
--   `01_code/07_labor_income_prediction.R`: Realiza la predicción de los ingresos bajo el mejor modelo de predicción.
+-   `01_code/02_load_and_preprare_data.R`: Importa los datos por webscrapping y realiza la limpieza necesaria a los datos.
+-   `01_code/03_descriptive_statistics.R`: Crea tablas y gráficas de estadística descriptiva de la base.
+-   `01_code/04_age_labor_income_profile.R`: Estima la relación edad-ingreso de los trabajadores bajo dos modelos:incondicional y condicional.
+-   `01_code/05_gender_labor_income_gap.R`: Estima la relación edad-ingreso de los trabajadores a la luz de la brecha de género.
+-   `01_code/06_labor_income_prediction.R`: Realiza la predicción de los ingresos bajo el mejor modelo de predicción.
 
 ## Salidas
 

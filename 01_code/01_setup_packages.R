@@ -1,14 +1,8 @@
-#Limpiar espacio de trabajo
-cat("\014")
-rm(list = ls())
+# Instalación de la librería Pacman
+if (!requireNamespace("pacman", quietly = TRUE)) {
+  install.packages("pacman")
+}
 
-#Agregamos la librerias necesarias 
-
-library(tidyverse)
-library(rvest)
-library(dplyr)
-library(skimr)
-library(stargazer)
-library(boot)
-library(knitr)
-library(kableExtra)
+#Agregamos la librerias necesarias
+library(pacman)
+p_load(rio, tidyverse, skimr, stargazer, rvest, dplyr, boot, knitr, kableExtra)
