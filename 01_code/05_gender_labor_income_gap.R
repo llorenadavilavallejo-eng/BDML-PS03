@@ -1,8 +1,7 @@
 # Grupo de variables control de acuerdo con las características del empleado
 
 controles <- c("age","I(age^2)","total_hours_worked","relab", "max_educ_level",
-               "oficio","size_firm", "reg_salud","cot_pension","estrato1",
-               "household_head")   
+               "oficio","size_firm", "reg_salud","cot_pension")   
 
 # Función auxiliar con el fin de construir la formula ###
 
@@ -13,7 +12,7 @@ fml <- function(y, rhs_vec){
 # Cálculo de la brecha condicional
 # Modelo no condicionado
 
-mod_3 <- lm(log_ingreso  ~ female, data = db)
+mod_3 <- lm(log_ingreso ~ female, data = db)
 
 summary(mod_3)
 beta_in <- coef(mod_3)[["female"]]
@@ -57,8 +56,8 @@ b_strap <- replicate(B, {
   
   ##FWL en las muestras bootstrap
   
-  fx_b <- resid(lm(fml("female", var_controles), data = d_b))
-  fy_b <- resid(lm(fml("log_ingreso", var_controles), data = d_b))
+  fx_b <- resid(lm(fml("female", controles), data = d_b))
+  fy_b <- resid(lm(fml("log_ingreso", controles), data = d_b))
   
   coef(lm(fy_b ~ fx_b))["fx_b"]
   
@@ -136,10 +135,8 @@ Base_fija <- db %>%
     oficio = factor(moda_f(db$oficio), levels = levels(db$oficio)),
     size_firm = factor(moda_f(db$size_firm), levels = levels(db$size_firm)),
     reg_salud = factor(moda_f(db$reg_salud), levels = levels(db$reg_salud)),
-    cot_pension = factor(moda_f(db$cot_pension), levels = levels(db$cot_pension)),
-    estrato1 = factor(moda_f(db$estrato1), levels = levels(db$estrato1)),
-    household_head = factor(moda_f(db$household_head), levels = levels(db$household_head))
-  )
+    cot_pension = factor(moda_f(db$cot_pension), levels = levels(db$cot_pension))
+    )
 
 # Hombres
 

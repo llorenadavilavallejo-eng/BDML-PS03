@@ -27,7 +27,7 @@ summary(base_geih_clean)
 
 variables <- c("y_total_m","age", "max_educ_level", "cot_pension", "sex", "oficio", 
                "size_firm", "relab", "total_hours_worked", "reg_salud","estrato1",
-               "p6050", "chunk_id")
+               "p6050","formal", "chunk_id")
 
 # Base con variables seleccionadas 
 base_geih_clean_vf <- base_geih_clean[, variables]
@@ -55,5 +55,6 @@ df <- df %>%
     oficio = as.factor(oficio),
     reg_salud = as.factor(reg_salud),
     cot_pension = as.factor(cot_pension),
-    household_head = as.factor(household_head)
+    household_head = as.factor(household_head),
+    formal = as.factor(formal)
   )
