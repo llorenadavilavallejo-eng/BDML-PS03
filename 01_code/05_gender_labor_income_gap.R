@@ -1,9 +1,9 @@
 # Grupo de variables control de acuerdo con las características del empleado
 
-controles <- c("age","I(age^2)","total_hours_worked","relab", "max_educ_level",
-               "oficio","size_firm", "reg_salud","cot_pension")   
+controles <- c("age","I(age^2)","total_hours_worked", "max_educ_level",
+               "size_firm", "reg_salud","cot_pension")   
 
-# Función auxiliar con el fin de construir la formula ###
+# Función auxiliar
 
 fml <- function(y, rhs_vec){
   as.formula(paste0(y," ~ ", paste(rhs_vec, collapse = "+")))
@@ -106,7 +106,7 @@ m_perfiles <- lm(
   fml("log_ingreso",
       c("female",
         "age", "I(age^2)",
-        "female:age", "female:I(age^2)",
+        "max_educ_level"*"age", "female"*"max_educ_level",
         setdiff(controles, c("age", "I(age^2)"))
       )
   ),

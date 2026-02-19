@@ -5,9 +5,6 @@ test  <- db %>% filter(chunk_id >= 8)
 
 # Definición modelos antes utilizados y nuevos
 
-controles <- c("age","I(age^2)","total_hours_worked", "max_educ_level",
-               "size_firm", "reg_salud","cot_pension")  
-
 mod_1 <- lm(log_ingreso ~ age + I(age^2), data = train)
 mod_2 <- lm(log_ingreso ~ age + I(age^2) + total_hours_worked + relab, data = train)
 mod_3 <- lm(log_ingreso ~ female, data = train)
