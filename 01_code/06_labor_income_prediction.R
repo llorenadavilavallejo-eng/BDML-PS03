@@ -3,16 +3,10 @@
 train <- db %>% filter(chunk_id <= 7)
 test  <- db %>% filter(chunk_id >= 8)
 
-# Limpieza previa por nuevos factores en oficio base test
-
-factor <- c("oficio")
-
-for(v in factor){
-  train[[v]] <- factor(train[[v]])
-  test[[v]]  <- factor(test[[v]], levels = levels(train[[v]]))
-}
-
 # Definición modelos antes utilizados y nuevos
+
+controles <- c("age","I(age^2)","total_hours_worked", "max_educ_level",
+               "size_firm", "reg_salud","cot_pension")  
 
 mod_1 <- lm(log_ingreso ~ age + I(age^2), data = train)
 mod_2 <- lm(log_ingreso ~ age + I(age^2) + total_hours_worked + relab, data = train)
@@ -61,14 +55,11 @@ cat("\n✓ Tabla text generada: comparacion_modelos_sección_3\n")
 
 # Errores de predicción del mejor modelo
 
-modelo_final <- mod_4
+modelo_final <- mod_10
 
 y_test <- test$log_ingreso
 y_hat  <- predict(modelo_final, newdata=test)
 errors <- y_test - y_hat
-
-summary(errors)
-sd(errors, na.rm = TRUE)
 
 grafico_errores_prediccion <- ggplot(data.frame(errors), aes(x=errors)) +
   geom_histogram(bins=40, fill="steelblue", color="white") +
@@ -78,7 +69,7 @@ grafico_errores_prediccion <- ggplot(data.frame(errors), aes(x=errors)) +
   theme_minimal()
 
 ggsave(
-  filename = "02_output/figures/Errores_prediccion .png",
+  filename = "02_output/figures/Errores_prediccion.png",
   plot = grafico_errores_prediccion,
   width = 7,
   height = 5,
@@ -87,92 +78,117 @@ ggsave(
 
 cat("\n✓ Gráfico generado: Errores_prediccion\n")
 
+df_pred <- data.frame(
+  y_test = y_test,
+  y_hat  = y_hat
+)
+
+grafica_ingreso_observado_estimado <- ggplot(df_pred, aes(x = y_hat, y = y_test)) +
+  geom_point(alpha = 0.3, color="steelblue") +
+  geom_abline(slope=1, intercept=0, color="red", linewidth=1) +
+  labs(title="Ingreso mensual observado y estimado",
+       x="Log (Ingreso) estimado",
+       y="Log (Ingreso) observado") +
+  theme_minimal()
+
+ggsave(
+  filename = "02_output/figures/Ingreso_observado_estimado.png",
+  plot = grafica_ingreso_observado_estimado,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+
+cat("\n✓ Gráfico generado: Ingreso_observado_estimado\n")
+
 # LOOCV
-
-res <- residuals(modelo_final)
-h <- hatvalues(modelo_final)
-
-loo_errors <- res/(1-h)
-loocv_rmse <- sqrt(mean(loo_errors^2))
-loocv_rmse
 
 X<- model.matrix(modelo_final)
 y <- model.response(model.frame(modelo_final))
 
 beta_hat <- modelo_final$coefficients
 
-## Calculate the inverse of  (X'X), call it G_inv
 G_inv<- solve(t(X)%*%X)
-
-## and 1/1-hi
 vec<- 1/(1-hatvalues(modelo_final))
+N <- nrow(X)
+LOO <- numeric(N)
 
-N <- nrow(X)  # Number of observations
-LOO <- numeric(N)  # To store the errors
-
-# Loop over each observation
 for (i in 1:N) {
-  # get the new beta
   new_beta<- beta_hat  - vec[i] * G_inv %*% as.vector(X[i, ]) * modelo_final$residuals[i]
-  ## get the new error
   new_error<- (y[i]- (X[i, ] %*% new_beta))^2
   LOO[i]<-  new_error
 }
 
 looCV_error <- mean(LOO)
-sqrt(looCV_error)
+loocv_mf <- sqrt(looCV_error)
+rmse_mh  <- rmse_table[10]
 
-# predicción en test
-y_hat  <- predict(modelo_final, newdata = test)
-y_test <- test$log_ingreso
+tabla_comparacion <- data.frame(
+  Modelo = "Mejor Modelo",
+  `LOOCV` = round(loocv_mf, 3),
+  `RMSE` = round(rmse_mh, 3)
+)
 
-# RMSE validación
-rmse_validation <- sqrt(mean((y_test - y_hat)^2, na.rm = TRUE))
+kable(tabla_comparacion) %>%
+  kable_styling(full_width=FALSE)
 
-rmse_validation
+save_kable(kable(tabla_comparacion),"02_output/tables/loocv_vs_rmse.html")
 
-test$pred <- predict(modelo_final, newdata = test)
+# Observaciones dificiles de predecir e influyentes
 
-test$error <- test$log_ingreso - test$pred
-test$abs_error <- abs(test$error)
+X <- model.matrix(modelo_final, data=train)
+X <- X[,-1]
+X_std <- scale(X)
+y <- train$log_ingreso
+y <- matrix(y, ncol=1)
 
-library(dplyr)
+# Descomposición FWL
+P <- X_std %*% solve(t(X_std)%*%X_std) %*% t(X_std)
+M <- diag(nrow(X_std)) - P
 
-hard_obs <- test %>%
-  arrange(desc(abs_error))
+y_tilde <- M %*% y
+X_tilde <- M %*% X_std
 
-head(hard_obs, 10)
+XtX_inv <- solve(t(X_tilde)%*%X_tilde)
+beta_hat <- XtX_inv %*% t(X_tilde) %*% y_tilde
+beta_hat <- matrix(beta_hat, ncol=1)
 
-train_used <- model.frame(modelo_final)
+# Loop de recalcular el modelo final luego de eliminar cada i-ésima observación
+N <- nrow(X_tilde)
+beta_influence <- numeric(N)
 
-nrow(train)
-nrow(train_used)
+for(i in 1:N){
+  xi <- matrix(X_tilde[i,], ncol=1)
+  ei <- as.numeric(y_tilde[i,1] - t(xi)%*%beta_hat)
+  hi <- as.numeric(t(xi)%*%XtX_inv%*%xi)
+  beta_minus_i <- beta_hat - (XtX_inv %*% xi) * (ei/(1-hi))
+  beta_influence[i] <- sum((beta_minus_i-beta_hat)^2)
+}
 
-# Observaciones influyentes
-X <- model.matrix(modelo_final)
-u <- residuals(modelo_final)
-h <- hatvalues(modelo_final)
-XtX_inv <- solve(t(X) %*% X)
+# Influencia de cada observación
+train$coef_influence <- beta_influence
 
-beta_influence <- sapply(1:nrow(X), function(i){
-  
-  xi <- matrix(X[i,], ncol = 1)
-  
-  delta_beta <- XtX_inv %*% xi * (u[i] / (1 - h[i]))
-  
-  sum(delta_beta^2)
-  
-})
+top_inf <- train %>% arrange(desc(coef_influence)) %>% head(10)
 
-train_used$beta_influence <- beta_influence
+train$leverage <- hatvalues(modelo_final)
+train$residuals <- residuals(modelo_final)
 
-influential <- train_used %>%
-  arrange(desc(beta_influence))
+cutoff <- 3*mean(train$leverage)
 
-head(influential, 15)
+# Gráfica residuo vs leverage de cada observación en train
 
-summary(influential$beta_influence)
+grafico_residuos_leverage <- ggplot(train,aes(residuals,leverage))+
+  geom_point(alpha=.4)+
+  geom_hline(yintercept=cutoff,color="red")+
+  theme_minimal()
 
-hist(influential$beta_influence, breaks = 50,
-     main = "Distribución de influencia en coeficientes",
-     xlab = "||β(-i) − β||²")
+ggsave(
+  filename = "02_output/figures/Residuos_leverage.png",
+  plot = grafico_residuos_leverage,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+
+cat("\n✓ Gráfico generado: residuos_leverage\n")
+
