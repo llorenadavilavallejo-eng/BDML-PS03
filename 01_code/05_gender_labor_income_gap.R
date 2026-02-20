@@ -100,178 +100,168 @@ stargazer(mod_3, f_reg,
 
 cat("\n✓ Tabla text generada: brecha_genero_sección_2\n")
 
-# Interacciones de los perfiles edad-ingreso por sexo
-
-m_perfiles <- lm(
-  fml("log_ingreso",
-      c("female",
-        "age", "I(age^2)",
-        "max_educ_level"*"age", "female"*"max_educ_level",
-        setdiff(controles, c("age", "I(age^2)"))
-      )
-  ),
-  data = db
-)
-
-# Función auxilar # con el fin 
+#perfiles edad-ingreso por sexo
 
 moda_f <- function(x) {
   ux <- na.omit(x)
-  names(sort(table(ux), decreasing = TRUE))[1]
-  
+  names(sort(table(ux), decreasing = TRUE)) [1]
 }
 
-# Base de predicción: controles fijos, pero la edad varia
+age_seq <-seq(min(final_db$age), max(final_db$age), by = 1)
 
-age_seq <- seq(min(db$age), max(db$age), by = 1)
-
-Base_fija <- db %>%
+Base_fija <- final_db %>%
   summarise(
-    total_hours_worked = mean(total_hours_worked, na.rm = TRUE)
+    totalHoursWorked = mean(totalHoursWorked, na.rm = TRUE)
   ) %>%
   mutate(
-    relab = factor(moda_f(db$relab), levels = levels(db$relab)),
-    max_educ_level = factor(moda_f(db$max_educ_level), levels = levels(db$max_educ_level)),
-    oficio = factor(moda_f(db$oficio), levels = levels(db$oficio)),
-    size_firm = factor(moda_f(db$size_firm), levels = levels(db$size_firm)),
-    reg_salud = factor(moda_f(db$reg_salud), levels = levels(db$reg_salud)),
-    cot_pension = factor(moda_f(db$cot_pension), levels = levels(db$cot_pension))
-    )
+    maxEducLevel = as.integer(moda_f(final_db$maxEducLevel)),
+    oficio = as.integer(moda_f(final_db$oficio)),
+    sizeFirm = as.integer(moda_f(final_db$sizeFirm)),
+    regSalud = as.integer(moda_f(final_db$regSalud)),
+    cotPension = as.integer(moda_f(final_db$cotPension))
+  )
 
-# Hombres
+#Base para Hombres (female = 0)
 
-Base_m <- Base_fija %>%
+Base_m <- Base_fija%>%
   slice(rep(1, length(age_seq))) %>%
   mutate(age = age_seq, female = 0)
 
-# Mujeres
+#Base para Mujeres (female = 1)
 
-Base_f <- Base_fija %>%
+Base_f <- Base_fija%>%
   slice(rep(1, length(age_seq))) %>%
-  mutate(age = age_seq, female = 1)
+  mutate(age = age_seq, female = 1) 
 
-pred_m <- predict(m_perfiles, newdata = Base_m, se.fit =TRUE)
-pred_f <- predict(m_perfiles, newdata = Base_f, se.fit =TRUE)
+
+stopifnot(nrow(Base_m) == length(age_seq))
+stopifnot(nrow(Base_f) == length(age_seq))
+
+#Prediccion f_reg
+
+pred_m <-predict(f_reg, newdata = Base_m, se.fit = TRUE)
+pred_f <-predict(f_reg, newdata = Base_f, se.fit = TRUE)
+
+
+#Unimos las predicciones
 
 df_pred <- bind_rows(
-  tibble(age = age_seq, female = 0, fit = pred_m$fit, se = pred_m$se.fit),
-  tibble(age = age_seq, female = 1, fit = pred_f$fit, se = pred_f$se.fit)
+  tibble(
+    age = age_seq, 
+    female = 0,
+    fit = pred_m$fit,
+    se = pred_m$se.fit),
+  tibble(
+    age = age_seq,
+    female = 1,
+    fit = pred_f$fit,
+    se = pred_f$se.fit
+  )
 )%>%
-  mutate(sex = if_else(female == 1, "mujer", "hombre" ),
-         lwr = fit - 1.96 *se,
-         upr = fit + 1.96 *se
-  )
-
-# Gráfico Perfil salarial estimado de acuerdo a Edad y Sexo
-
-df_pred <- df_pred %>%
   mutate(
-    lwr = fit - 1.96*se,
-    upr = fit + 1.96*se
+    sex = if_else(female == 1, "mujer", "hombre"),
+    lwr = fit - 1.96 * se,
+    upr = fit + 1.96 * se
   )
 
-grafico_edad_sexo <- ggplot(df_pred, aes(x = age, y = fit, color = sex, fill = sex)) +
+#Realizamos el grafico frente a los perfiles
+
+p_perfiles <- ggplot(df_pred, aes(x = age, y = fit, color = sex, fill = sex)) +
   geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.25, color = NA) +
-  geom_line(linewidth = 1) +
-  scale_color_manual(values = c("hombre" = "dodgerblue4",
-                                "mujer"  = "red")) +
-  scale_fill_manual(values = c("hombre" = "dodgerblue4",
-                               "mujer"  = "red")) +
+  geom_line(linewidth = 1 ) +
+  scale_color_manual(values = c ("hombre" = "dodgerblue4",
+                                 "mujer" = "red")) +
+  scale_fill_manual(values = c ("hombre" = "dodgerblue4",
+                                "mujer" = "red")) +
   labs(
-    title = "Perfil salarial estimado de acuerdo a Edad y Sexo",
+    title =  "Perfil salarial estimado de acuerdo a Edad y Sexo",
     x = "Edad",
-    y = "predicción log(ingreso laboral mensual)",
+    y = "Prediccion log(ingreso laboral mensual)",
     color = "Sexo",
-    fill  = "Sexo"
+    fill = "Sexo"
   ) +
   theme_minimal()
 
-ggsave(
-  filename = "02_output/figures/Perfil_edad_ingreso_sexo.png",
-  plot = grafico_edad_sexo,
-  width = 7,
-  height = 5,
-  dpi = 300
-)
+print(p_perfiles)
 
-cat("\n✓ Gráfico generado: Perfil_edad_ingreso_sexo\n")
+ggsave("grafico_perfiles_edad_sexo.png", p_perfiles,
+       width = 10, height = 6, dpi = 300)
+
+cat("\ngrafico_perfiles_edad_sexo.png\n")
 
 
-# Peak ages con intervalos de confianza
 
-coef_prof <- coef(m_perfiles)
+##5.3 Peak ages con los intervalos de confianza
 
-# Hombre beta age y age^2
-b1_m <- coef_prof[["age"]]
-b2_m <- coef_prof[["I(age^2)"]]
-peak_m <- -b1_m/ (2*b2_m)
+#Acontinuacion learizaremos los peaks ages es decir los hombres y mujeres a que edad alcanzan su maximo
+#ingreso
 
-# Mujer
+coef_modelo <- coef(f_reg)
 
-b1_f <- b1_m + coef_prof[["female:age"]]
-b2_f <- b2_m + coef_prof [["female:I(age^2)"]]
-peak_f <- -b1_f/ (2*b2_f)
+#hombre beta age y age^2
+b1 <- coef_modelo[["age"]]
+b2 <- coef_modelo[["I(age^2)"]]
+peak_age <- -b1/ (2*b2)
 
-# Bootstrap peak age e intervalos de confianza
 
-set.seed(1996)
+########Bootstrap peak age y los intervalos de confianza###
+
+#Para esto fijamos una semillapara repoducibilidad
+
+set.seed(19)
 B <- 1000
 
-boot_peaks <- replicate(B, {
+
+boot_peak <- replicate(B, {
   
-  idx <- sample.int(nrow(db), replace = TRUE)
-  d_b <- db [idx, ]
+  idx <- sample.int(nrow(final_db), replace = TRUE)
+  d_b <- final_db [idx, ]
   
-  m_b <- lm(
-    fml("log_ingreso",
-        c("female",
-          "age", "I(age^2)",
-          "female:age", "female:I(age^2)",
-          setdiff(controles, c("age", "I(age^2)"))
-        )
-    ),
-    data = d_b
-  )
+  
+  m_b <- lm(fml("log_w", c("female", var_controles)), data = d_b)
+  
   
   
   cb <- coef(m_b) 
-  b1_m_b <- cb[["age"]]
-  b2_m_b <- cb[["I(age^2)"]]
-  b1_f_b <- b1_m_b + cb [["female:age"]]
-  b2_f_b <- b2_m_b + cb [["female:I(age^2)"]]
+  b1_b <- cb[["age"]]
+  b2_b <- cb[["I(age^2)"]]
   
-  c(
-    peak_m = -b1_m_b/(2*b2_m_b),
-    peak_f = -b1_f_b/(2*b2_f_b)
-  )
-  
-})
+  -b1_b / (2 /  b2_b)
+})  
+
+
+
 
 ##Extraemos ICS
-ci_m <-quantile(boot_peaks["peak_m",], c(0.025, 0.975), na.rm = TRUE)
-ci_f <-quantile(boot_peaks["peak_f",], c(0.025, 0.975), na.rm = TRUE)
+ci_peak <-quantile(boot_peak, c(0.025, 0.975), na.rm = TRUE)
 
-# Tabla Peak age por sexo
+cat(sprintf("IC 95%%: [%.1f - %.1f] años\n", ci_peak[1], ci_peak[2]))
+
+
+##Tabla### peak age por sexo
 
 tab_peaks <- tibble(
-  Grupo  = c("Hombre", "Mujer"),
-  `Peak Age` = round(c(peak_m, peak_f), 1),
-  `IC 95% Inf.` = round(c(ci_m[1], ci_f[1]), 1),
-  `IC 95% Sup.` = round(c(ci_m[2], ci_f[2]), 1)
+  `Grupo`  = "Ambos (Hombre y Mujer)",
+  `Peak Age` = round(peak_age, 1),
+  `IC 95% Inf.` = round(ci_peak[1], 1),
+  `IC 95% Sup.` = round(ci_peak[2], 1)
 )
+
+print(kable(tab_peaks, format = "simple"))
+
+#Exportamos la tabla
 
 tabla_peaks_html <- tab_peaks %>%
   kable(format = "html",
-        caption = "Peak Ages por Sexo (Intervalos de Confianza Bootstrap 95%)",
-        col.names = c("Grupo", "Peak Age", "IC 95% Inferior", "IC 95% Superior"),
+        capation = " Peak age ",
+        col.names = c("Grupo", "Peak Age (años)", "IC 95% inferior", "IC 95% superior"),
         align = c("l", "r", "r", "r")) %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+  kable_styling(bootstrap_options = c ("striped", "hover", "condensed"),
                 full_width = FALSE,
                 font_size = 16,
                 position = "center") %>%
   row_spec(0, bold = TRUE, background = "#4472C4", color = "white") %>%
-  row_spec(1:2, background = c("white", "#F2F2F2"))
+  row_spec(1, background = "White")
 
-save_kable(tabla_peaks_html, file = "02_output/tables/tabla_peaks.html")
-
-cat("\n✓ Tabla html generada: tabla_peaks.html\n")
+save_kable(tabla_peaks_html, "tablas_peaks_html")
+cat("\tabla peaks_guardada: tabla_peaks.html\n")
