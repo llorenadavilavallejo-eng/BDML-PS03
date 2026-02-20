@@ -1,7 +1,5 @@
 # Resumen y visualización
 
-summary(df)
-db <- as_tibble(df)
 skim(db) %>% head()
 
 # Visualización de los datos contra ingreso

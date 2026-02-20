@@ -100,7 +100,7 @@ stargazer(mod_3, f_reg,
 
 cat("\n✓ Tabla text generada: brecha_genero_sección_2\n")
 
-#perfiles edad-ingreso por sexo
+# Perfiles edad-ingreso por sexo
 
 moda_f <- function(x) {
   ux <- na.omit(x)
@@ -184,14 +184,12 @@ p_perfiles <- ggplot(df_pred, aes(x = age, y = fit, color = sex, fill = sex)) +
 
 print(p_perfiles)
 
-ggsave("grafico_perfiles_edad_sexo.png", p_perfiles,
+ggsave("02_output/figures/grafico_perfiles_edad_sexo.png", p_perfiles,
        width = 10, height = 6, dpi = 300)
 
-cat("\ngrafico_perfiles_edad_sexo.png\n")
+cat("\n✓ Gráfico generado: grafico_perfiles_edad_sexo\n")
 
-
-
-##5.3 Peak ages con los intervalos de confianza
+# Peak ages con los intervalos de confianza
 
 #Acontinuacion learizaremos los peaks ages es decir los hombres y mujeres a que edad alcanzan su maximo
 #ingreso
@@ -213,23 +211,17 @@ B <- 1000
 
 
 boot_peak <- replicate(B, {
-  
   idx <- sample.int(nrow(db), replace = TRUE)
-  d_b <- db [idx, ]
-  
+  d_b <- db[idx, ]
   
   m_b <- lm(fml("log_ingreso", c("female", controles)), data = d_b)
-  
-  
   
   cb <- coef(m_b) 
   b1_b <- cb[["age"]]
   b2_b <- cb[["I(age^2)"]]
   
-  -b1_b / (2 /  b2_b)
-})  
-
-
+  -b1_b / (2 * b2_b)
+})
 
 
 ##Extraemos ICS
@@ -263,5 +255,5 @@ tabla_peaks_html <- tab_peaks %>%
   row_spec(0, bold = TRUE, background = "#4472C4", color = "white") %>%
   row_spec(1, background = "White")
 
-save_kable(tabla_peaks_html, "tablas_peaks_html")
-cat("\tabla peaks_guardada: tabla_peaks.html\n")
+save_kable(tabla_peaks_html, "02_output/tables/tablas_peaks.html")
+cat("\n✓ Tabla html generada: tabla_peaks.html\n")

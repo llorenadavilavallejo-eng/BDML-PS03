@@ -9,15 +9,14 @@ mod_1 <- lm(log_ingreso ~ age + I(age^2), data = train)
 mod_2 <- lm(log_ingreso ~ age + I(age^2) + total_hours_worked + relab, data = train)
 mod_3 <- lm(log_ingreso ~ female, data = train)
 mod_4 <- lm(fml("log_ingreso", c("female", controles)), data = train)
-mod_5 <- lm(fml("log_ingreso", c("female","female:age", "female:I(age^2)", controles)), data = train)
 
-mod_6 <- lm(log_ingreso ~ age + I(age^2) + female + max_educ_level, data=train) # modelo mincer con brecha salarial y formalidad
-mod_7 <- lm(log_ingreso ~ age + I(age^2) + female + max_educ_level + total_hours_worked + relab + formal, data=train) # modelo 6 + horas, formal y tipo de relab
-mod_8 <- lm(log_ingreso ~ age + I(age^2) + I(age^3) + female + max_educ_level + total_hours_worked + relab + formal, data=train) # modelo 7 + age^3
-mod_9 <- lm(log_ingreso ~ age + I(age^2) + max_educ_level*age + female*max_educ_level + total_hours_worked + relab + formal, data=train) # modelo 7 + interacciones
-mod_10 <- lm(fml("log_ingreso", c("female","formal","estrato1","household_head", controles)), data = train) # modelo con diferentes características sociales y laborales
+mod_5 <- lm(log_ingreso ~ age + I(age^2) + female + max_educ_level, data=train) # modelo mincer con brecha salarial
+mod_6 <- lm(log_ingreso ~ age + I(age^2) + female + max_educ_level + total_hours_worked + relab + formal, data=train) # modelo 6 + horas, formal, tipo de relab y formalidad
+mod_7 <- lm(log_ingreso ~ age + I(age^2) + I(age^3) + female + max_educ_level + total_hours_worked + relab + formal, data=train) # modelo 7 + age^3
+mod_8 <- lm(log_ingreso ~ age + I(age^2) + max_educ_level*age + female*max_educ_level + total_hours_worked + relab + formal, data=train) # modelo 7 + interacciones
+mod_9 <- lm(fml("log_ingreso", c("female","formal","estrato1","household_head", controles)), data = train) # modelo con diferentes características sociales y laborales
 
-modelos <- list(mod_1,mod_2,mod_3,mod_4,mod_5,mod_6,mod_7,mod_8,mod_9,mod_10)
+modelos <- list(mod_1,mod_2,mod_3,mod_4,mod_5,mod_6,mod_7,mod_8,mod_9)
 
 # Cálculo RMSE
 
@@ -29,7 +28,7 @@ rmse <- function(model, data){
 
 rmse_table <- sapply(modelos, rmse, data=test)
 
-data.frame(Modelo = paste0("Mod_",1:10), RMSE = rmse_table)
+data.frame(Modelo = paste0("Mod_",1:9), RMSE = rmse_table)
 
 # Cuadro comparativo
 
@@ -52,7 +51,7 @@ cat("\n✓ Tabla text generada: comparacion_modelos_sección_3\n")
 
 # Errores de predicción del mejor modelo
 
-modelo_final <- mod_10
+modelo_final <- mod_9
 
 y_test <- test$log_ingreso
 y_hat  <- predict(modelo_final, newdata=test)
@@ -118,7 +117,7 @@ for (i in 1:N) {
 
 looCV_error <- mean(LOO)
 loocv_mf <- sqrt(looCV_error)
-rmse_mh  <- rmse_table[10]
+rmse_mh  <- rmse_table[9]
 
 tabla_comparacion <- data.frame(
   Modelo = "Mejor Modelo",
@@ -126,10 +125,10 @@ tabla_comparacion <- data.frame(
   `RMSE` = round(rmse_mh, 3)
 )
 
-kable(tabla_comparacion) %>%
-  kable_styling(full_width=FALSE)
+tabla_html <- kable(tabla_comparacion, format = "html") %>%
+  kable_styling(full_width = FALSE)
 
-save_kable(kable(tabla_comparacion),"02_output/tables/loocv_vs_rmse.html")
+save_kable(tabla_html, "02_output/tables/loocv_vs_rmse.html")
 
 # Observaciones dificiles de predecir e influyentes
 
@@ -188,4 +187,6 @@ ggsave(
 )
 
 cat("\n✓ Gráfico generado: residuos_leverage\n")
+
+cat("\n✓ FIN DEL CÓDIGO \n")
 

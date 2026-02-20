@@ -58,3 +58,6 @@ df <- df %>%
     household_head = as.factor(household_head),
     formal = as.factor(formal)
   )
+
+summary(df)
+db <- as_tibble(df)

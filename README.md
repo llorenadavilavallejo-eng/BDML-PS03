@@ -6,9 +6,9 @@ En este repositorio encontrará la solución del Problem set 1 correspondiente a
 
 ## Autores
 
--   Leidy Lorena Dávila Vallejo - COD:
--   Juan Guillermo Sánchez - COD:
--   Héctor Steben Barrios Carranza - COD:
+-   Leidy Lorena Dávila Vallejo - COD: 202522776
+-   Juan Guillermo Sánchez - COD: 202323123
+-   Héctor Steben Barrios Carranza - COD: 202116184
 
 ## Replicación
 
@@ -31,9 +31,9 @@ Para reproducir todos los resultados, correr:
 Todos los outputs se generan automáticamente en `02_outputs/`.
 
 -   Figuras (`02_outputs/figures/`): visualizaciones generadas por el código
--   Tablas (`02_outputs/tables/`): resultados de estimaciones en formato `.tex`
+-   Tablas (`02_outputs/tables/`): resultados de estimaciones en formato `.tex` y `.html`
 
 ## Software / entorno
 
 -   R version 4.5.1
--   Required packages:
+-   Required packages: Pacman
