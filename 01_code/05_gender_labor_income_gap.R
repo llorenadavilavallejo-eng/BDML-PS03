@@ -107,18 +107,18 @@ moda_f <- function(x) {
   names(sort(table(ux), decreasing = TRUE)) [1]
 }
 
-age_seq <-seq(min(final_db$age), max(final_db$age), by = 1)
+age_seq <-seq(min(db$age), max(db$age), by = 1)
 
-Base_fija <- final_db %>%
+Base_fija <- db %>%
   summarise(
-    totalHoursWorked = mean(totalHoursWorked, na.rm = TRUE)
+    total_hours_worked = mean(total_hours_worked, na.rm = TRUE)
   ) %>%
   mutate(
-    maxEducLevel = as.integer(moda_f(final_db$maxEducLevel)),
-    oficio = as.integer(moda_f(final_db$oficio)),
-    sizeFirm = as.integer(moda_f(final_db$sizeFirm)),
-    regSalud = as.integer(moda_f(final_db$regSalud)),
-    cotPension = as.integer(moda_f(final_db$cotPension))
+    max_educ_level = factor(moda_f(db$max_educ_level)),
+    oficio = factor(moda_f(db$oficio)),
+    size_firm = factor(moda_f(db$size_firm)),
+    reg_salud = factor(moda_f(db$reg_salud)),
+    cot_pension = factor(moda_f(db$cot_pension))
   )
 
 #Base para Hombres (female = 0)
@@ -214,11 +214,11 @@ B <- 1000
 
 boot_peak <- replicate(B, {
   
-  idx <- sample.int(nrow(final_db), replace = TRUE)
-  d_b <- final_db [idx, ]
+  idx <- sample.int(nrow(db), replace = TRUE)
+  d_b <- db [idx, ]
   
   
-  m_b <- lm(fml("log_w", c("female", var_controles)), data = d_b)
+  m_b <- lm(fml("log_ingreso", c("female", controles)), data = d_b)
   
   
   
