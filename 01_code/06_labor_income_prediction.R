@@ -14,7 +14,7 @@ mod_5 <- lm(log_ingreso ~ age + I(age^2) + female + max_educ_level, data=train) 
 mod_6 <- lm(log_ingreso ~ age + I(age^2) + female + max_educ_level + total_hours_worked + relab + formal, data=train) # modelo 6 + horas, formal, tipo de relab y formalidad
 mod_7 <- lm(log_ingreso ~ age + I(age^2) + I(age^3) + female + max_educ_level + total_hours_worked + relab + formal, data=train) # modelo 7 + age^3
 mod_8 <- lm(log_ingreso ~ age + I(age^2) + max_educ_level*age + female*max_educ_level + total_hours_worked + relab + formal, data=train) # modelo 7 + interacciones
-mod_9 <- lm(fml("log_ingreso", c("female","formal","estrato1","household_head", controles)), data = train) # modelo con diferentes características sociales y laborales
+mod_9 <- lm(fml("log_ingreso", c("female","formal","estrato1", controles)), data = train) # modelo con diferentes características sociales y laborales
 
 modelos <- list(mod_1,mod_2,mod_3,mod_4,mod_5,mod_6,mod_7,mod_8,mod_9)
 

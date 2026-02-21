@@ -27,7 +27,7 @@ summary(base_geih_clean)
 
 variables <- c("y_total_m","age", "max_educ_level", "cot_pension", "sex", "oficio", 
                "size_firm", "relab", "total_hours_worked", "reg_salud","estrato1",
-               "p6050","formal", "chunk_id")
+               "formal", "chunk_id")
 
 # Base con variables seleccionadas 
 base_geih_clean_vf <- base_geih_clean[, variables]
@@ -44,9 +44,6 @@ df <- df %>%
   mutate(female = ifelse(sex == 1, 0, 1))
 
 df <- df %>%
-  mutate(household_head = ifelse(p6050 == 1, 1, 0))
-
-df <- df %>%
   mutate(
     max_educ_level = as.factor(max_educ_level),
     estrato1 = as.factor(estrato1),
@@ -55,7 +52,6 @@ df <- df %>%
     oficio = as.factor(oficio),
     reg_salud = as.factor(reg_salud),
     cot_pension = as.factor(cot_pension),
-    household_head = as.factor(household_head),
     formal = as.factor(formal)
   )
 
