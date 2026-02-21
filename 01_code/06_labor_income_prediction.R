@@ -49,6 +49,75 @@ stargazer(modelos,
 
 cat("\n✓ Tabla text generada: comparacion_modelos_sección_3\n")
 
+# Cuadro comparativo mejorado
+
+vars_mostrar <- c(
+  "age",
+  "I(age^2)",
+  "I(age^3)",
+  "total_hours_worked",
+  "relab",
+  "female",
+  "max_educ_level",
+  "size_firm",
+  "reg_salud",
+  "cot_pension",
+  "formal",
+  "age:max_educ_level",
+  "max_educ_level:female",
+  "estrato1"
+)
+
+tiene_var <- function(modelo, var){
+  trms <- attr(terms(modelo), "term.labels")
+  as.integer(var %in% trms)
+}
+
+tabla <- sapply(modelos, function(m){
+  sapply(vars_mostrar, function(v) tiene_var(m, v))
+})
+
+tabla <- as.data.frame(tabla)
+colnames(tabla) <- paste0("M",1:length(modelos))
+rownames(tabla) <- vars_mostrar
+
+tabla[] <- ifelse(tabla==1,"✔","")
+
+tabla["R² ajustado",] <- round(sapply(modelos, function(x) summary(x)$adj.r.squared),3)
+tabla["Observaciones",] <- sapply(modelos, nobs)
+tabla["RMSE",] <- round(rmse_table,3)
+
+nombres_es <- c(
+  "Edad",
+  "Edad²",
+  "Edad³",
+  "Horas trabajadas",
+  "Relación laboral",
+  "Mujer",
+  "Max. nivel educativo",
+  "Tamaño de la empresa",
+  "Afiliación a salud",
+  "Cotización a pensión",
+  "Empleo formal",
+  "Edad × Educación",
+  "Mujer × Educación",
+  "Estrato"
+)
+
+rownames(tabla)[1:length(nombres_es)] <- nombres_es
+
+tabla_html <- kable(tabla,
+                    format="html",
+                    align="c",
+                    caption="Especificaciones de los modelos y desempeño predictivo") %>%
+  kable_styling(full_width=FALSE,
+                bootstrap_options=c("striped","condensed"),
+                font_size=15)
+
+save_kable(tabla_html,"02_output/tables/tabla_modelos_resumen.html")
+
+cat("\n✓ Tabla resumen generada: tabla_modelos_resumen.html\n")
+
 # Errores de predicción del mejor modelo
 
 modelo_final <- mod_9
